@@ -20,10 +20,10 @@ private:
 	int* m_now_stage_button;
 	int m_button_create = 6;
 
-	std::string* m_files;
+	std::vector<std::string> m_files;
 
 	Box m_desk;
-	Button*** m_button; //1個目→ステージ、2個目→個数、3個目→種類
+	Button** m_button; //1個目→ステージ、2個目→個数
 	
 	MainPlayer m_player;
 	Human m_player_friend;

@@ -1,23 +1,15 @@
 #include	"../h/Game.h"
 
 void GameState::Enter() {
-	m_button = new Button ** [m_stage];
+	m_button = new Button* [m_stage];
 	m_now_stage_button = new int[m_stage];
-	m_files = new std::string[2]{ "Image/Switch1.png","Image/Switch2.png" };
+	m_files = { "../Image/Switch1.png","../Image/Switch2.png" };
 
 	for (int i = 0; i < m_stage; i++) {
 		m_now_stage_button[i] = i + 1;
 
-		m_button[i] = new Button*[m_now_stage_button[i]];
-
-		for (int j = 0; j < m_now_stage_button[i]; j++) {
-			m_button[i][j] = new Button[2];
-
-			for (int k = 0; k < 2; k++) {
-				if (i != 0) m_button[i][j][k].GetImage().SetImage(m_files[k]);
-				else m_button[i][j][k].GetImage().SetImage(m_files[k]);
-			}
-		}
+		m_button[i] = new Button[m_now_stage_button[i]]
+		{ Box(GameObject(Vector2Int(0, 0),Vector2(0.6, 0.6),0,m_files),Vector2(), Color())};
 	}
 }
 
@@ -25,15 +17,14 @@ StateBase* GameState::Loop() {
 	m_player.Operate();
 
 	for (int i = 0; i < m_now_stage_button[m_now_stage]; i++) {
-		for (int j = 0; j < 2; j++) {
-			m_player.Action(MOUSE_LEFT, "WAS_PRESSED", m_button[m_now_stage][i][j]);
+		if (m_player.Action(MOUSE_LEFT, "WAS_PRESSED", m_button[m_now_stage][i])) {
+
 		}
 	}
-	
+
 	m_desk.Display();
-	for (int i = 0; i < m_now_stage_button[m_now_stage]; i++) {
-		for(int j = 0; j < 2; j++) m_button[i][j]->Display();
-	}
+	for (int i = 0; i < m_now_stage_button[m_now_stage]; i++)
+		 m_button[m_now_stage][i].Display();
 
 	m_player.Display();
 	m_player_friend.Display();
@@ -42,10 +33,10 @@ StateBase* GameState::Loop() {
 }
 
 void GameState::Exit() {
-	for (int i = 0; i < m_stage; i++) { if (m_button[i] != nullptr) { delete m_button[i];  m_button[i] = nullptr; } }
-	if (m_button != nullptr) { delete m_button; m_button = nullptr; }
+	for (int i = 0; i < m_stage; i++) { if (m_button[i] != nullptr) { delete[] m_button[i];  m_button[i] = nullptr; } }
+	if (m_button != nullptr) { delete[] m_button; m_button = nullptr; }
 
-	if (m_files != nullptr) { delete m_files; m_files = nullptr; }
+	if (m_now_stage_button != nullptr) { delete[] m_now_stage_button; m_now_stage_button = nullptr; }
 }
 
 //GameState::Game(int stage, int button_create, const int* stage_button_create, std::string* files) : m_stage(stage), m_button_create(button_create),m_files(files) {

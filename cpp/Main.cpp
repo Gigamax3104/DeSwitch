@@ -1,18 +1,5 @@
 #include	"../h/Game.h"
-#include	"../h/Variable.h"
 #include	"../h/ErrorMessage.h"
-
-const char* imageFile[] = {
-	"Image/Switch1.png","Image/Switch2.png"
-};
-
-const char* soundFile[] = {
-	"Sound/ÉçÉäê_.mp3"
-};
-
-const char* videoFile[] = {
-	"Video/ÉtÉäÅ[îöî≠ëfçﬁmeme.mp4"
-};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	SetWindowText("DeSwitch");
@@ -24,6 +11,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	try {
 		GameState game;
+
+		while (1) {
+			ClearDrawScreen();
+
+			game.Loop();
+
+			ScreenFlip();
+			WaitTimer(FR);
+			if (ProcessMessage() == -1) break;
+			if (CheckHitKey(KEY_INPUT_ESCAPE)) break;
+		}
 	}
 	catch (ErrorMassage& massage) {
 		while (1) {
@@ -37,28 +35,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if (CheckHitKey(KEY_INPUT_ESCAPE)) break;
 		}
 	}
-	//int save_massage_posY = 0;
-
-	//MAIN:
-	//try {
-	//	while (1) {
-	//		ClearDrawScreen();
-
-	//		ScreenFlip();
-	//		WaitTimer(FR);
-	//		if (ProcessMessage() == -1) break;
-	//		if (CheckHitKey(KEY_INPUT_ESCAPE)) break;
-	//	}
-	//}
-	//catch (ErrorMassage& massage) {
-	//	massage.m_pos.y = save_massage_posY;
-
-	//	massage.Show();
-
-	//	save_massage_posY = massage.m_pos.y;
-
-	//	goto MAIN;
-	//}
 
 	DxLib_End();
 	return 0;

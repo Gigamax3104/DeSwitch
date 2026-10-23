@@ -2,7 +2,9 @@
 
 #include	"../h/MousePointer.h"
 
-MousePointer::MousePointer() {
+MousePointer::MousePointer()
+	: m_box(Vector2Int(0, 0), Vector2(10, 10), Vector2(1, 1), 0x0000ff),
+	m_circle(Vector2Int(0, 0), Vector2(1,1), 10, 0x00ff00){
 	m_input_size = 3;
 	
 	m_buttons = new int[m_input_size] { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };

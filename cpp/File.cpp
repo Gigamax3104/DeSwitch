@@ -6,24 +6,39 @@
 #include	<algorithm>
 
 using namespace DeSwitch;
+namespace fs = std::experimental::filesystem; //省略するため用意
 
-File::File(const std::string& file_name) : m_size(NULL), m_file_name(file_name){
-	std::fstream file(file_name, std::ios::binary | std::ios::out | std::ios::trunc); //バイナリモードでファイルを開く(読み込み専用のifstream)
-	if (!file.is_open()) return;
+File::File(const std::string& file_name) : m_size(NULL){
+	if (!file_name.empty()) { //文字列が空でない時
+		if (!file_name.front() == '.') { //最初の文字が「.」でない時(ファイル名のみ)
+			m_file.open(file_name, BINARY | IN | OUT);
 
-	file.seekg(std::ios::end); //ファイルポインタの位置を最後尾へ
-	m_size = file.tellg(); //ファイルのメモリサイズを取得(先頭から何バイト目か)
-	file.seekg(std::ios::beg); //ファイルポインタの位置を先頭へ
+			m_file_name = file_name;
+		}
+		else if (file_name.find("../") != std::string::npos) { //相対パスの後にファイルがあった時
+			fs::path project = fs::path(__FILE__).parent_path(); //このソースコードがあるファイルのパスを返す。(_FILE_がそれ)
+			fs::path clean_path = fs::canonical(project / file_name); //canonical→絶対パスへ変換したものを省略されている「../」を除く
+			std::string generic = clean_path.generic_string(); //絶対パスでは「＼＼」が区切りとして入っているため、generic_string関数で「/」に戻す
+			m_file.open(generic, BINARY | IN | OUT);
+
+			m_file_name = generic;
+		}
+	}
+
+	if (!m_file.is_open()) throw ErrorMassage("Error::「" + m_file_name + "」を読み込めませんでした。");
+
+	m_file.seekg(std::ios::end); //ファイルポインタの位置を最後尾へ
+	m_size = m_file.tellg(); //ファイルのメモリサイズを取得(先頭から何バイト目か)
+	m_file.seekg(std::ios::beg); //ファイルポインタの位置を先頭へ
 
 	size_t save_buf = m_buf.size();
 	m_buf.resize(save_buf + sizeof(size_t)); //スペースを空けておく。
 	std::memcpy(&m_buf[save_buf], &m_size, sizeof(size_t)); //サイズをコピー
 
-	if (!file.read((char*)m_buf.data(), m_size)) return;
+	m_file.read((char*)m_buf.data(), m_size);
+	if (m_size == NULL) throw ErrorMassage("Error::ファイルのサイズを取得できませんでした。");
 
-	m_file = std::move(file);
-
-	file.close();
+	m_file.close();
 }
 
 void File::operator=(File* other) {
@@ -47,73 +62,80 @@ File& File::operator=(File&& other) noexcept {
 }
 
 template <typename T> void File::Save(const T& data) {
-	try { if (m_file.is_open()) throw -1; }
-	catch(int value) { throw ErrorMassage("Error::ファイルを読み込めませんでした。"); }
+	if (m_file.is_open()) throw ErrorMassage("Error::ファイルを読み込めませんでした。");
 
 	m_file << data;
 }
 
 template <typename T> void File::Load(T* data) {
-	try { if (m_file.is_open()) throw -1; }
-	catch(int value) { throw ErrorMassage("Error::ファイルを読み込めませんでした。"); }
+	if (m_file.is_open()) throw ErrorMassage("Error::ファイルを読み込めませんでした。");
 
 	*data << m_file;
 }
 
 ImageFile::ImageFile(const std::string& file_name) : File(file_name){
-	size_t divide_format = file_name.find_last_of(".");
-	if (divide_format == std::string::npos) return;
+	size_t divide_format = m_file_name.find_last_of(".");
+	if (divide_format == std::string::npos) throw ErrorMassage("Error::「" + m_file_name + "」の形式を入れてください。");
 
-	std::string format = file_name.substr(divide_format + 1);
+	std::string format = m_file_name.substr(divide_format + 1);
 	std::transform(format.begin(), format.end(), format.begin(), ::tolower);
 
-	if (format == "png" || format == "jpg" || format == "bmp") m_image_file = LoadGraph((const TCHAR*)&file_name);
+	if (format == "png" || format == "jpeg" || format == "bmp" || format == "dds" || format == "argb" || format == "tga")
+		m_image_file = LoadGraph(m_file_name.c_str());
+	else throw ErrorMassage("Error::「" + m_file_name + "」の形式が画像ではありませんでした。");
+
+	if (m_image_file == -1) throw ErrorMassage("Error::「" + m_file_name + "」を読み込みましたが、画像を確保できませんでした。");
 }
 
 int ImageFile::Base_LoadFile(const std::string& file_name, bool get) {
-	std::fstream file(file_name, std::ios::binary | std::ios::out | std::ios::trunc); //バイナリモードでファイルを開く(読み込み専用のifstream)
-	try { if (!file.is_open()) throw -1; }
-	catch (int value) { throw ErrorMassage("Error::ファイルを読み込めませんでした。"); }
+	if (!file_name.empty()) { //文字列が空でない時
+		if (!(file_name.front() == '.')) { //最初の文字が「.」でない時(ファイル名のみ)
+			m_file.open(file_name, BINARY | IN | OUT);
 
-	file.seekg(std::ios::end); //ファイルポインタの位置を最後尾へ
-	m_size = file.tellg(); //ファイルのメモリサイズを取得(先頭から何バイト目か)
-	file.seekg(std::ios::beg); //ファイルポインタの位置を先頭へ
+			m_file_name = file_name;
+		}
+		else if (file_name.find("../") != std::string::npos) { //相対パスの後にファイルがあった時
+			fs::path project = fs::path(__FILE__).parent_path(); //このソースコードがあるファイルのパスを返す。(_FILE_がそれ)
+			fs::path clean_path = fs::canonical(project / file_name); //canonical→絶対パスへ変換したものを省略されている「../」を除く
+			std::string generic = clean_path.generic_string(); //絶対パスでは「＼＼」が区切りとして入っているため、generic_string関数で「/」に戻す
+			m_file.open(generic, BINARY | IN | OUT);
+
+			m_file_name = generic;
+		}
+	}
+
+	if (!m_file.is_open()) throw ErrorMassage("Error::「" + m_file_name + "」を読み込めませんでした。");
+
+	m_file.seekg(std::ios::end); //ファイルポインタの位置を最後尾へ
+	m_size = m_file.tellg(); //ファイルのメモリサイズを取得(先頭から何バイト目か)
+	m_file.seekg(std::ios::beg); //ファイルポインタの位置を先頭へ
 
 	size_t save_buf = m_buf.size();
 	m_buf.resize(save_buf + sizeof(size_t)); //スペースを空けておく。
 	std::memcpy(&m_buf[save_buf], &m_size, sizeof(size_t)); //サイズをコピー
 
-	try { if (!file.read((char*)m_buf.data(), m_size)) throw -1; }
-	catch (int value) { throw ErrorMassage("Error::ファイルのサイズを確保できませんでした。"); }
+	m_file.read((char*)m_buf.data(), m_size);
+	if (m_size == NULL) throw ErrorMassage("Error::ファイルのサイズを取得できませんでした。");
 
-	m_file = std::move(file);
+	m_file.close();
 
-	file.close();
+	size_t divide_format = m_file_name.find_last_of(".");
+	if (divide_format == std::string::npos) throw ErrorMassage("Error::「" + m_file_name + "」の形式を入れてください。");
 
-	if (m_image_file != -1) DeleteGraph(m_image_file); //既に画像が設定されていた場合、メモリから削除する。
-
-	size_t divide_format = file_name.find_last_of(".");
-	try { if (divide_format == std::string::npos) throw -1; }
-	catch (int value) { throw ErrorMassage("Error::ファイルの形式が読み込めませんでした。"); }
-
-	std::string format = file_name.substr(divide_format + 1);
+	std::string format = m_file_name.substr(divide_format + 1);
 	std::transform(format.begin(), format.end(), format.begin(), ::tolower);
 
-	try {
-		if (format == "png" || format == "jpg" || format == "bmp") m_image_file = LoadGraph((const TCHAR*)&file_name);
-		else throw -1;
-	}
-	catch (int value) { throw ErrorMassage("Error::ファイルの形式が画像ではありませんでした。"); }
+	if (format == "png" || format == "jpeg" || format == "bmp" || format == "dds" || format == "argb" || format == "tga")
+		m_image_file = LoadGraph(m_file_name.c_str());
+	else throw ErrorMassage("Error::「" + m_file_name + "」の形式が画像ではありませんでした。");
+
+	if (m_image_file == -1) throw ErrorMassage("Error::「" + m_file_name + "」を読み込みましたが、画像を確保できませんでした。");
 
 	return get ? m_image_file : NULL;
 }
 
 void ImageFile::operator=(const ImageFile& other) {
-	if (this != &other) {
-		if(other.m_file_name != "\0") LoadFile(other.m_file_name);
-		this->m_buf = other.m_buf;
-		this->m_size = other.m_size;
-	}
+	LoadFile(other.m_file_name);
 }
 
 ImageFile& ImageFile::operator=(const ImageFile&& other) noexcept {
@@ -128,18 +150,19 @@ ImageFile& ImageFile::operator=(const ImageFile&& other) noexcept {
 
 MovieFile::MovieFile(const std::string& file_name) {
 	size_t divide_format = file_name.find_last_of(".");
-	if (divide_format == std::string::npos) return;
+	if (divide_format == std::string::npos) throw ErrorMassage("Error::映像ファイルの形式を読み込めませんでした。");
 
 	std::string format = file_name.substr(divide_format + 1);
 	std::transform(format.begin(), format.end(), format.begin(), ::tolower);
 
 	if (format == "mp4") m_movie_file = LoadGraph((const TCHAR*)&file_name);
+	else throw ErrorMassage("Error::ファイルの形式が映像ではありませんでした。");
 
 }
 int MovieFile::Base_LoadFile(const std::string& file_name, bool get) {
 	std::fstream file(file_name, std::ios::binary | std::ios::out | std::ios::trunc); //バイナリモードでファイルを開く(読み込み専用のifstream)
-	try { if (!file.is_open()) throw - 1; }
-	catch (int value) { throw ErrorMassage("Error::ファイルを読み込めませんでした。"); }
+
+	if (!file.is_open()) throw ErrorMassage("Error::映像ファイルを読み込めませんでした。");
 
 	file.seekg(std::ios::end); //ファイルポインタの位置を最後尾へ
 	m_size = file.tellg(); //ファイルのメモリサイズを取得(先頭から何バイト目か)
@@ -149,8 +172,9 @@ int MovieFile::Base_LoadFile(const std::string& file_name, bool get) {
 	m_buf.resize(save_buf + sizeof(size_t)); //スペースを空けておく。
 	std::memcpy(&m_buf[save_buf], &m_size, sizeof(size_t)); //サイズをコピー
 
-	try { if (!file.read((char*)m_buf.data(), m_size)) throw -1; }
-	catch (int value) { throw ErrorMassage("Error::ファイルのサイズを確保できませんでした。"); }
+	file.read((char*)m_buf.data(), m_size);
+
+	if (m_size == NULL) throw ErrorMassage("Error::映像ファイルのサイズを確保できませんでした。");
 
 	m_file = std::move(file);
 
@@ -164,8 +188,8 @@ int MovieFile::Base_LoadFile(const std::string& file_name, bool get) {
 	std::string tempPath = "temp_" + name;
 
 	std::ofstream outFile(tempPath, std::ios::binary);
-	try { if (!outFile.is_open()) throw -1; } // ディスク書き込み失敗時のエラーチェック
-	catch (int value) { throw ErrorMassage("Error::ディスクからファイルを読み込めませんでした。"); }
+
+	if (!outFile.is_open()) throw ErrorMassage("Error::ディスクから映像ファイルを読み込めませんでした。"); // ディスク書き込み失敗時のエラーチェック
 
 	m_size = static_cast<size_t>(outFile.tellp());
 

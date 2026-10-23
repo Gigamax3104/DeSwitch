@@ -30,40 +30,40 @@ template<typename T>void Font<T>::ExDraw(Vector2Int pos, Vector2 size, std::stri
 
 void Image::operator=(const Image& other)
 {
-	if (this != &other) this->m_image = other.m_image;
+	if (this != &other) {
+		this->m_image = other.m_image;
+	}
 }
 
 const Image& Image::operator=(const Image&& other) noexcept {
-	if (this != &other) this->m_image = other.m_image;
+	m_image = other.m_image;
+
+	GetGraphSize(m_image.GetImageFile(), &m_image_graphSize.x, &m_image_graphSize.y);
 
 	return *this;
 }
 
 void Image::Draw(const Vector2& pos) {
-	try { if (!m_image.CheckSetImageFile()) throw - 1; }
-	catch (int value) { throw ErrorMassage("画像が設定されてないため、描画することができませんでした。"); }
+	if(!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
 	DrawGraph((int)pos.x - m_image_graphSize.x, (int)pos.y - m_image_graphSize.y, m_image.GetImageFile(), TRUE);
 }
 
 void Image::Draw(const Vector2Int& pos) {
-	try { if (!m_image.CheckSetImageFile()) throw - 1; }
-	catch (int value) { throw ErrorMassage("画像が設定されてないため、描画することができませんでした。"); }
+	if (!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
 	DrawGraph(pos.x - m_image_graphSize.x, pos.y - m_image_graphSize.y, m_image.GetImageFile(), TRUE);
 }
 
 void Image::ExDraw(const Vector2& pos, const Vector2 scale) {
-	try { if (!m_image.CheckSetImageFile()) throw - 1; }
-	catch (int value) { throw ErrorMassage("画像が設定されてないため、描画することができませんでした。"); }
+	if (!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
 	DrawExtendGraph((int)pos.x - m_image_graphSize.x, (int)pos.y - m_image_graphSize.y, ((int)pos.x + m_image_graphSize.x) * (int)scale.x,
 		((int)pos.y + m_image_graphSize.y) * (int)scale.y, m_image.GetImageFile(), TRUE);
 }
 
 void Image::ExDraw(const Vector2Int& pos, const Vector2 scale) {
-	try { if (!m_image.CheckSetImageFile()) throw - 1; }
-	catch (int value) { throw ErrorMassage("画像が設定されてないため、描画することができませんでした。"); }
+	if (!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
 	DrawExtendGraph(pos.x - m_image_graphSize.x, pos.y - m_image_graphSize.y, (pos.x + m_image_graphSize.x) * (int)scale.x,
 		(pos.y + m_image_graphSize.y) * (int)scale.y, m_image.GetImageFile(), TRUE);

@@ -1,5 +1,8 @@
 #pragma once
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+
 #include	<fstream>
+#include	<experimental/filesystem>
 #include	<string>
 #include	<vector>
 #include	<cstdio>
@@ -8,6 +11,11 @@
 
 #include	"DxLib.h"
 #include	"Vector2Int.h"
+
+#define BINARY std::ios::binary
+#define IN std::ios::in
+#define OUT std::ios::out
+#define TRUNC std::ios::trunc
 
 namespace DeSwitch {
   class File {
@@ -22,7 +30,7 @@ namespace DeSwitch {
 		const std::string& GetFileName() const { return m_file_name; }
 		size_t GetSize() const { return m_size; }
 
-		File() : m_file(""), m_size(NULL), m_buf(NULL) {}
+		File() : m_file(""), m_size(0), m_buf(NULL) {}
 		File(const std::string& file_name);
 		File(File&& other) noexcept : m_file(std::move(other.m_file)), m_buf(other.m_buf), m_size(other.m_size) {}
 
@@ -39,9 +47,10 @@ namespace DeSwitch {
 		std::fstream m_file;
 
 		std::string m_file_name;
+
 		std::vector<unsigned char> m_buf;
 
-		virtual int Base_LoadFile(const std::string& file_name, bool get) { return NULL; }
+		virtual int Base_LoadFile(const std::string& file_name, bool get) = 0;
 
 	private:
 		virtual void Destroy() {}
@@ -62,7 +71,9 @@ namespace DeSwitch {
 
 		int GetImageFile() const { return m_image_file; }
 
-		bool CheckSetImageFile() const { return m_image_file != -1 && m_image_file != NULL; }
+		bool CheckSetImageFile() const {
+			return m_image_file != -1 && m_image_file != NULL;
+}
 
 		void Destroy() override { if (m_image_file != -1) { DeleteGraph(m_image_file); m_image_file = -1; } }
 
@@ -79,9 +90,7 @@ namespace DeSwitch {
 		MovieFile(const std::string& file_name);
 		MovieFile(const MovieFile& other) { operator=(other); }
 
-		virtual ~MovieFile() {
-		
-		}
+		virtual ~MovieFile() {}
 
 		void operator=(const MovieFile& other);
 		MovieFile& operator=(const MovieFile&& other) noexcept;

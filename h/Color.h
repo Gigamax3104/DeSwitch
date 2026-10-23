@@ -13,8 +13,8 @@ public:
 	int color;
 	bool transparent;
 
-	Color() : color(COLOR_WHITE), transparent(false){}
-	Color(int color_code, bool trans = false) : color(color_code), transparent(trans){}
+	Color() : color(COLOR_WHITE), transparent(true){}
+	Color(int color_code, bool trans = true) : color(color_code), transparent(trans){}
 	Color(const Color& other) : color(other.color), transparent(other.transparent){}
 
 	void operator=(const Color& other) { color = other.color; transparent = other.transparent; }

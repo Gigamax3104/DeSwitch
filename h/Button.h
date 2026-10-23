@@ -2,33 +2,33 @@
 #include	"GameObject.h"
 #include	"Box.h"
 
-class ButtonInput : public Box {
-protected:
-	ButtonInput() : Box(){}
-	ButtonInput(const ButtonInput& input) : Box(input){}
+//class ButtonInput : public Box {
+//protected:
+//	ButtonInput() : Box(){}
+//	ButtonInput(const ButtonInput& input) : Box(input){}
+//
+//	virtual ~ButtonInput(){}
+//
+//	void operator=(const ButtonInput& other) { Box::operator=(other); }
+//};
+//
+//class ButtonStand : public ButtonInput {
+//protected:
+//	ButtonStand() : ButtonInput(){}
+//	ButtonStand(const ButtonStand& stand) : ButtonInput(stand){}
+//
+//	virtual ~ButtonStand(){}
+//
+//	void operator=(const ButtonStand& other) { ButtonInput::operator=(other); }
+//};
 
-	virtual ~ButtonInput(){}
-
-	void operator=(const ButtonInput& other) { Box::operator=(other); }
-};
-
-class ButtonStand : public ButtonInput {
-protected:
-	ButtonStand() : ButtonInput(){}
-	ButtonStand(const ButtonStand& stand) : ButtonInput(stand){}
-
-	virtual ~ButtonStand(){}
-
-	void operator=(const ButtonStand& other) { ButtonInput::operator=(other); }
-};
-
-class Button : public ButtonStand{
+class Button : public Box{
 public:
 	Button(){}
-	Button(const ButtonStand& stand) : ButtonStand(stand){}
-	Button(const Button& other) : ButtonStand(other){}
+	Button(const Box& box) : Box(box){}
+	Button(const Button& other) : Box(other){}
 
-	void operator=(const Button& other) { if (this != &other) { ButtonStand::operator=(other); } }
+	void operator=(const Button& other) { if (this != &other) { Box::operator=(other); } }
 
 	virtual ~Button(){}
 };

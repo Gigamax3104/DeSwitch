@@ -1,12 +1,13 @@
 #include	"../h/Circle.h"
 
-Circle::Circle(Vector2Int pos, Vector2 scale, double radius, int color, double angle, bool transFlag)
-: GameObject(pos,scale,angle),m_radius(radius),m_color(color,transFlag){}
+Circle::Circle(Vector2Int pos, Vector2 scale, double radius, int color, double angle, bool transFlag, std::vector<std::string> imageFile, std::vector<std::string> movieFile)
+: GameObject(pos,scale,angle, imageFile, movieFile),m_radius(radius),m_color(color,transFlag){}
 
 Circle::Circle(GameObject obj, double radius, int color, bool transFlag)
 : GameObject(obj),m_radius(radius),m_color(color,transFlag){}
 
-Circle::Circle(GameObject obj, double radius, Color color) : GameObject(obj),m_radius(radius),m_color(color){}
+Circle::Circle(GameObject obj, double radius, Color color)
+	: GameObject(obj),m_radius(radius),m_color(color){}
 
 void Circle::operator=(const Circle& other) {
 	if (this != &other) {

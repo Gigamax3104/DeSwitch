@@ -14,8 +14,8 @@ public:
 	MousePointer& GetMousePointer() { return m_mouse; }
 	KeyInput& GetKeyInput() { return m_key; }
 
-	virtual void Operate() { m_mouse.ChangePointer(); m_mouse.AllCheck(); m_key.AllCheck(); }
-	bool Action(int button, std::string situation, Box target);
+	virtual void Operate() { m_mouse.ChangePointer(); m_mouse.GetCircle()->Display(); m_mouse.AllCheck(); m_key.AllCheck(); }
+	bool Action(int button, std::string situation, const Box& target);
 
 private:
 	MousePointer m_mouse;

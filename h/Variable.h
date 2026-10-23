@@ -12,6 +12,7 @@
 #define NO false
 
 const int FR = MS / FPS; //フレームレート
+const double DELTATIME = MS / FPS; //deltaTime
 
 const int WIDTH = 1080, HEIGHT = 720; //ウインドウサイズ(WIDTH→幅、HEIGHT→高)
 

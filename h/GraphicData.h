@@ -33,8 +33,8 @@ private:
 class Image {
 public:
 	Image(){}
-	Image(const std::string& file_name) : m_image(file_name){}
-	Image(Image&& other) noexcept : m_image(std::move(other.m_image)){}
+	Image(const std::string& file_name) : m_image(file_name) { GetGraphSize(m_image.GetImageFile(), &m_image_graphSize.x, &m_image_graphSize.y); }
+	Image(Image&& other) noexcept : m_image(std::move(other.m_image)){ GetGraphSize(m_image.GetImageFile(), &m_image_graphSize.x, &m_image_graphSize.y);}
 
 	virtual ~Image(){}
 
@@ -49,6 +49,7 @@ public:
 
 	void SetImage(const std::string& file_name) { m_image.Destroy(); m_image.LoadFile(file_name); }
 
+	bool CheckImageData() const { return m_image.CheckSetImageFile(); }
 	DeSwitch::ImageFile& Get_ImageData() { return m_image; }
 	const DeSwitch::ImageFile& Get_ImageData() const { return m_image; }
 
@@ -80,7 +81,9 @@ public:
 
 	void SetMovie(const std::string& file_name) { m_movie.LoadFile(file_name); }
 
+	bool CheckMovieData() const { return m_movie.CheckSetMovieFile(); }
 	DeSwitch::MovieFile& Get_MovieData() { return m_movie; }
+	const DeSwitch::MovieFile& Get_MovieData() const { return m_movie; }
 
 	Vector2Int Get_MovieGraphSize();
 	Vector2Int Get_H_MovieGraphSize() { return Get_MovieGraphSize() / 2; }
