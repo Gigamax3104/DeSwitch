@@ -26,7 +26,9 @@ GameObject::GameObject(Vector2Int pos, Vector2 size, double angle, std::vector<s
 		m_image = new Image[m_image_size];
 
 		for (int i = 0; i < m_image_size; i++)
-			if (imageFile[i] != "\0") m_image[i] = imageFile[i];
+			if (imageFile[i] != "\0") {
+				m_image[i] = imageFile[i];
+			}
 	}
 
 	if (!movieFile.empty()) {
