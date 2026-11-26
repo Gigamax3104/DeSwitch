@@ -2,35 +2,20 @@
 #include	"GameObject.h"
 #include	"Box.h"
 
-//class ButtonInput : public Box {
-//protected:
-//	ButtonInput() : Box(){}
-//	ButtonInput(const ButtonInput& input) : Box(input){}
-//
-//	virtual ~ButtonInput(){}
-//
-//	void operator=(const ButtonInput& other) { Box::operator=(other); }
-//};
-//
-//class ButtonStand : public ButtonInput {
-//protected:
-//	ButtonStand() : ButtonInput(){}
-//	ButtonStand(const ButtonStand& stand) : ButtonInput(stand){}
-//
-//	virtual ~ButtonStand(){}
-//
-//	void operator=(const ButtonStand& other) { ButtonInput::operator=(other); }
-//};
-
 class Button : public Box{
 public:
-	Button(){}
-	Button(const Box& box) : Box(box){}
-	Button(const Button& other) : Box(other){}
+	Button() : m_flag(false){}
+	Button(const Box& box) : Box(box), m_flag(false){}
+	Button(const Button& other) : Box(other), m_flag(false){}
 
 	void operator=(const Button& other) { if (this != &other) { Box::operator=(other); } }
 
 	virtual ~Button(){}
+
+	void Press() { if (!m_flag) m_flag = !m_flag; } //フラグがfalseの時にif文でtrueになり、フラグがtrueの時にif文でfalseになる。
+	bool GetFlag() const { return m_flag; }
+private:
+	bool m_flag;
 };
 
 //const int IMAGESIZE = 2; 

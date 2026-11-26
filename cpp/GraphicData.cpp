@@ -1,42 +1,69 @@
 #include	<cstdlib>
-#include	<DxLib.h>
+#include	"DxLib.h"
 
 #include	"../h/ErrorMessage.h"
 #include	"../h/GraphicData.h"
 #include	"../h/Variable.h"
 
-template<typename T>void Font<T>::Draw(Vector2Int pos, const char* font, Color c) {
+Font::Font(const char* font_name, int size, int thick)
+: m_font_code(CreateFontToHandle(font_name, size, thick)) {}
+
+Font::Font(const char* font_name, int size, int thick, int type)
+: m_font_code(CreateFontToHandle(font_name, size, thick, type)){}
+
+void Font::SetFont(const char* font_name, int size, int thick) {
+	if (m_font_code != -1 && m_font_code != NULL) DeleteFontToHandle(m_font_code);
+
+	m_font_code = CreateFontToHandle(font_name, size, thick);
+}
+
+void Font::SetFont(const char* font_name, int size, int thick, int type) {
+	if (m_font_code != -1 && m_font_code != NULL) DeleteFontToHandle(m_font_code);
+
+	m_font_code = CreateFontToHandle(font_name, size, thick, type);
+}
+
+void Font::Draw(Vector2Int pos, const char* font, Color c) {
 	DrawString(pos.x, pos.y, font, c.color);
 }
-template<typename T>void Font<T>::Draw(Vector2Int pos, std::string font, Color c) {
-	DrawString(pos.x, pos.y, (const TCHAR*)&font, c.color);
+void Font::Draw(Vector2Int pos, std::string font, Color c) {
+	DrawString(pos.x, pos.y, font.c_str(), c.color);
 }
 
-template<typename T>void Font<T>::FDraw(Vector2Int pos, const char* font, Color c, const T data) {
-	while (data != nullptr) { DrawFormatString(pos.x, pos.y, c.color, font, data); }
+void Sound::operator=(const Sound& other) { this->m_sound = other.m_sound; }
+
+const Sound& Sound::operator=(const Sound&& other) noexcept {
+	this->m_sound = other.m_sound;
+
+	return *this;
 }
 
-template<typename T>void Font<T>::FDraw(Vector2Int pos, std::string font, Color c, const T data) {
-	while (data != nullptr) { DrawFormatString(pos.x, pos.y, c.color, font, data); }
+void Sound::SetVolume(double raito){
+	ChangeVolumeSoundMem(int(255 * raito / 100), m_sound.GetSoundFile()); //0～255をまでをraito÷100で求めた倍率にする。
 }
 
-template<typename T>void Font<T>::ExDraw(Vector2Int pos, Vector2 size, const char* font, Color c, const T data) {
-	while (data != nullptr) { DrawExtendFormatString(pos.x, pos.y, size.x, size.y, c.color, font, data); }
-}
+void Sound::Stop_And_Play() {
+	SetFontSize(50);
 
-template<typename T>void Font<T>::ExDraw(Vector2Int pos, Vector2 size, std::string font, Color c, const T data){
-	while (data != nullptr) { DrawExtendFormatString(pos.x, pos.y, size.x, size.y, c.color, font, data); }
-}
-
-void Image::operator=(const Image& other)
-{
-	if (this != &other) {
-		this->m_image = other.m_image;
+	if (CheckSoundMem(m_sound.GetSoundFile()) == 0) {
+		PlaySoundMem(m_sound.GetSoundFile(), m_type);
+		DrawString(0, 0, "再生", 0x00ff00);
 	}
+	else if (CheckSoundMem(m_sound.GetSoundFile()) == 1 && m_type != NULL) {
+		StopSoundMem(m_sound.GetSoundFile());
+		DrawString(0, 0, "停止", 0xffffff);
+	}
+
+	SetFontSize(20);
+}
+void Image::operator=(const Image& other){
+	this->m_image = other.m_image;
+
+	GetGraphSize(m_image.GetImageFile(), &m_image_graphSize.x, &m_image_graphSize.y);
 }
 
 const Image& Image::operator=(const Image&& other) noexcept {
-	m_image = other.m_image;
+	this->m_image = other.m_image;
 
 	GetGraphSize(m_image.GetImageFile(), &m_image_graphSize.x, &m_image_graphSize.y);
 
@@ -46,97 +73,169 @@ const Image& Image::operator=(const Image&& other) noexcept {
 void Image::Draw(const Vector2& pos) {
 	if(!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
-	DrawGraph((int)pos.x - m_image_graphSize.x, (int)pos.y - m_image_graphSize.y, m_image.GetImageFile(), TRUE);
+	DrawGraph(int(pos.x) - m_image_graphSize.Half().x, int(pos.y) - m_image_graphSize.Half().y, m_image.GetImageFile(), TRUE);
 }
 
 void Image::Draw(const Vector2Int& pos) {
 	if (!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
-	DrawGraph(pos.x - m_image_graphSize.x, pos.y - m_image_graphSize.y, m_image.GetImageFile(), TRUE);
+	DrawGraph(pos.x - m_image_graphSize.Half().x, pos.y - m_image_graphSize.Half().y, m_image.GetImageFile(), TRUE);
 }
 
 void Image::ExDraw(const Vector2& pos, const Vector2 scale) {
 	if (!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
-	DrawExtendGraph((int)pos.x - m_image_graphSize.x, (int)pos.y - m_image_graphSize.y, ((int)pos.x + m_image_graphSize.x) * (int)scale.x,
-		((int)pos.y + m_image_graphSize.y) * (int)scale.y, m_image.GetImageFile(), TRUE);
+	Vector2Int r = { int(m_image_graphSize.x * scale.x / 2), int(m_image_graphSize.y * scale.y / 2) }; //倍率に合わせてサイズを変える
+
+	DrawExtendGraph(int(pos.x) - r.x, int(pos.y) - r.y, int(pos.x) + r.x, int(pos.y) + r.y, m_image.GetImageFile(), TRUE);
 }
 
 void Image::ExDraw(const Vector2Int& pos, const Vector2 scale) {
 	if (!m_image.CheckSetImageFile()) throw ErrorMassage("画像が設定されてないため、描画することができませんでした。");
 
-	DrawExtendGraph(pos.x - m_image_graphSize.x, pos.y - m_image_graphSize.y, (pos.x + m_image_graphSize.x) * (int)scale.x,
-		(pos.y + m_image_graphSize.y) * (int)scale.y, m_image.GetImageFile(), TRUE);
+	Vector2Int r = { (int)(m_image_graphSize.x * scale.x / 2), (int)(m_image_graphSize.y * scale.y / 2) }; //倍率に合わせてサイズを変える
+
+	DrawExtendGraph(pos.x - r.x, pos.y - r.y, pos.x + r.x, pos.y + r.y, m_image.GetImageFile(), TRUE);
 }
 
-Vector2Int Image::Get_ImageGraphSize() {
-	try { if (!m_image.CheckSetImageFile()) throw - 1; }
-	catch (int value) { throw ErrorMassage("Error::画像が見つかりませんでした。"); }
+void Image::SetImage(const std::string& file_name) {
+	m_image.Destroy();
 
-	Vector2Int size;
+	m_image.LoadFile(file_name);
 
-	GetGraphSize(m_image.GetImageFile(), &size.x, &size.y);
-	return size;
+	GetGraphSize(m_image.GetImageFile(), &m_image_graphSize.x, &m_image_graphSize.y);
 }
 
-void Movie::operator=(const Movie& other) { if(this != &other) this->m_movie.operator=(other.m_movie); }
+void Movie::operator=(const Movie& other) {
+	this->m_movie.operator=(other.m_movie);
+
+	GetGraphSize(m_movie.GetMovieFile(), &m_movie_graphSize.x, &m_movie_graphSize.y);
+}
 
 const Movie& Movie::operator=(const Movie&& other) noexcept {
 	if (this != &other) this->m_movie.operator=(other.m_movie);
 
+	GetGraphSize(m_movie.GetMovieFile(), &m_movie_graphSize.x, &m_movie_graphSize.y);
+
 	return *this;
 }
 
+void Movie::SetVolume(double raito) {
+	SetMovieVolumeToGraph(int(10000 * raito / 100), m_movie.GetMovieFile()); //0～10000までをraito÷100で求めた倍率にする。
+}
+
 void Movie::Play(const Vector2& pos) {
-	try{ if (m_movie.GetMovieFile() == -1) throw - 1; }
-	catch (int value) { throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。"); }
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
 
-	PlayMovieToGraph(m_movie.GetMovieFile());
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if (nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
 
-	while (ProcessMessage() == 0 && GetMovieStateToGraph(m_movie.GetMovieFile()) == 1)
-		DrawGraph((int)pos.x - m_movie_graphSize.x, (int)pos.y - m_movie_graphSize.y, m_movie.GetMovieFile(), TRUE);
+	Vector2Int p = { int(pos.x) - m_movie_graphSize.Half().x, int(pos.y) - m_movie_graphSize.Half().y };
+
+	DrawGraph(p.x, p.y, m_movie.GetMovieFile(), TRUE);
 }
 
 void Movie::Play(const Vector2Int& pos) {
-	try { if (m_movie.GetMovieFile() == -1) throw - 1; }
-	catch (int value) { throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。"); }
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
 
-	PlayMovieToGraph(m_movie.GetMovieFile());
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if (nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
 
-	while (ProcessMessage() == 0 && GetMovieStateToGraph(m_movie.GetMovieFile()) == 1)
-		DrawGraph(pos.x - m_movie_graphSize.x, pos.y - m_movie_graphSize.y, m_movie.GetMovieFile(), TRUE);
+	Vector2Int p = { pos.x - m_movie_graphSize.Half().x, pos.y - m_movie_graphSize.Half().y };
+
+	DrawGraph(p.x, p.y, m_movie.GetMovieFile(), TRUE);
 }
 
-void Movie::ExPlay(const Vector2& pos, const Vector2& scale) {
-	try { if (m_movie.GetMovieFile() == -1) throw - 1; }
-	catch (int value) { throw ErrorMassage("Error::映像データが見つかりません。"); }
+void Movie::ExPlay_Scale(const Vector2& pos, const Vector2& scale) {
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
 
-	PlayMovieToGraph(m_movie.GetMovieFile());
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if (nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
 
-	while (ProcessMessage() == 0 && GetMovieStateToGraph(m_movie.GetMovieFile()) == 1)
-		DrawExtendGraph((int)pos.x - m_movie_graphSize.x, (int)pos.y - m_movie_graphSize.y,((int)pos.x + m_movie_graphSize.x) * (int)scale.x,
-			((int)pos.y + m_movie_graphSize.y) * (int)scale.y, m_movie.GetMovieFile(), TRUE);
+	Vector2Int r = { int(m_movie_graphSize.x * scale.x / 2), int(m_movie_graphSize.y * scale.y / 2) };
+
+	DrawExtendGraph(int(pos.x) - r.x, int(pos.y) - r.y, int(pos.x) + r.x, int(pos.y) + r.y, m_movie.GetMovieFile(), TRUE);
 }
 
-void Movie::ExPlay(const Vector2Int& pos, const Vector2& scale) {
-	try { if (m_movie.GetMovieFile() == -1) throw - 1; }
-	catch (int value) { throw ErrorMassage("Error::映像データが見つかりません。"); }
+void Movie::ExPlay_Scale(const Vector2Int& pos, const Vector2& scale) {
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
 
-	PlayMovieToGraph(m_movie.GetMovieFile());
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if (nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
 
-	while (ProcessMessage() == 0 && GetMovieStateToGraph(m_movie.GetMovieFile()) == 1)
-		DrawExtendGraph(pos.x - m_movie_graphSize.x, pos.y - m_movie_graphSize.y, (pos.x + m_movie_graphSize.x) * (int)scale.x,
-			(pos.y + m_movie_graphSize.y) * (int)scale.y, m_movie.GetMovieFile(), TRUE);
+	Vector2Int r = { int(m_movie_graphSize.x * scale.x / 2), int(m_movie_graphSize.y * scale.y / 2) };
+
+	DrawExtendGraph(pos.x - r.x, pos.y - r.y, pos.x + r.x, pos.y + r.y, m_movie.GetMovieFile(), TRUE);
 }
 
-Vector2Int Movie::Get_MovieGraphSize() {
-	try { if (m_movie.GetMovieFile() == -1) throw - 1; }
-	catch (int value) { throw ErrorMassage("Error::映像が見つかりませんでした。"); }
+void Movie::ExPlay_Limit(const Vector2& pos, const Vector2& limit_pos) {
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
 
-	Vector2Int size;
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if (nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
 
-	GetGraphSize(m_movie.GetMovieFile(), &size.x, &size.y);
-	return size;
+	Vector2Int halfPos = m_movie_graphSize.Half();
+
+	DrawExtendGraph(int(pos.x) - halfPos.x, int(pos.y) - halfPos.y,
+		int(limit_pos.x) + halfPos.x, int(limit_pos.y) + halfPos.y, m_movie.GetMovieFile(), TRUE);
+}
+
+void Movie::ExPlay_Limit(const Vector2Int& pos, const Vector2Int& limit_pos) {
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
+
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if(nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
+
+	Vector2Int halfPos = m_movie_graphSize.Half();
+
+	DrawExtendGraph(pos.x - halfPos.x, pos.y - halfPos.y,
+		limit_pos.x + halfPos.x, limit_pos.y + halfPos.y, m_movie.GetMovieFile(), TRUE);
+}
+
+void Movie::ExPlay(const Vector2& pos, const Vector2& limit_pos, const Vector2& scale) {
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
+
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if (nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
+
+	Vector2Int r = { int(m_movie_graphSize.x * scale.x / 2), int(m_movie_graphSize.y * scale.y / 2) };
+
+	DrawExtendGraph(int(pos.x) - r.x, int(pos.y) - r.y, int(limit_pos.x) + r.x, int(limit_pos.y) + r.y, m_movie.GetMovieFile(), TRUE);
+}
+
+void Movie::ExPlay(const Vector2Int& pos, const Vector2Int& limit_pos, const Vector2& scale) {
+	if (!m_movie.CheckSetMovieFile()) throw ErrorMassage("Error::映像データが見つからないため、再生することができませんでした。");
+
+	int nowFrame = TellMovieToGraphToFrame(m_movie.GetMovieFile());
+	if (nowFrame >= m_movie.GetFrame()) { SeekMovieToGraph(m_movie.GetMovieFile(), 0); PlayMovieToGraph(m_movie.GetMovieFile()); } //再生位置を初期位置に戻して再生
+	else if (nowFrame == 0) PlayMovieToGraph(m_movie.GetMovieFile()); //再生
+
+	Vector2Int r = { int(m_movie_graphSize.x * scale.x / 2), int(m_movie_graphSize.y * scale.y / 2) };
+
+	DrawExtendGraph(pos.x - r.x, pos.y - r.y, limit_pos.x + r.x, limit_pos.y + r.y, m_movie.GetMovieFile(), TRUE);
+}
+
+void Movie::Stop_And_Play() {
+	SetFontSize(50);
+
+	if (GetMovieStateToGraph(m_movie.GetMovieFile()) == 0) {
+		PlayMovieToGraph(m_movie.GetMovieFile());
+		DrawString(0, 0, "再生", 0x00ff00);
+	}
+
+	else if (GetMovieStateToGraph(m_movie.GetMovieFile()) == 1) {
+		PauseMovieToGraph(m_movie.GetMovieFile());
+		DrawString(0, 0, "停止", 0xffffff);
+	}
+
+	SetFontSize(20);
 }
 //GraphicData::GraphicData()
 //	: m_size(Vector2(0.0, 0.0)), m_scale(Vector2(1.0, 1.0)),m_graphic(new int[1]) {}

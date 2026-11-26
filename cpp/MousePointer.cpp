@@ -1,9 +1,7 @@
-#include	"DxLib.h"
-
 #include	"../h/MousePointer.h"
 
 MousePointer::MousePointer()
-	: m_box(Vector2Int(0, 0), Vector2(10, 10), Vector2(1, 1), 0x0000ff),
+	: m_box(Vector2Int(0, 0), Vector2(1.0, 1.0), Vector2(0, 0), 0x0000ff),
 	m_circle(Vector2Int(0, 0), Vector2(1,1), 10, 0x00ff00){
 	m_input_size = 3;
 	
@@ -18,23 +16,25 @@ MousePointer::~MousePointer() {
 }
 
 void MousePointer::Check(int button) {
-	if ((GetMouseInput() & button) == 0) {
+	if (m_relese_flag[button / 2]) m_relese_flag[button / 2] = false;
+
+	if (m_input[button / 2] >= 1 && (GetMouseInput() & button) == 0) {
 		m_input[button / 2] = 0;
 		m_relese_flag[button / 2] = true;
 	}
 	
 	m_input[button / 2] += (GetMouseInput() & button);
-	if (m_input[button / 2] >= 1) m_relese_flag[button / 2] = false;
 }
 
 void MousePointer::AllCheck() {
 	for (int i = 0; i < m_input_size; i++) {
-		if ((GetMouseInput() & m_buttons[i]) == 0) {
+		if (m_relese_flag[i]) m_relese_flag[i] = false;
+
+		if (m_input[i] >= 1 && (GetMouseInput() & m_buttons[i]) == 0) {
 			m_input[i] = 0;
 			m_relese_flag[i] = true;
 		}
 
 		m_input[i] += (GetMouseInput() & m_buttons[i]);
-		if (m_input[i] >= 1) m_relese_flag[i] = false;
 	}
 }

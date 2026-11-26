@@ -1,24 +1,48 @@
+Ôªø#include	"../h/Title.h"
 #include	"../h/Game.h"
+#include	"../h/Variable.h"
+#include	"../h/Time.h"
 
 void GameState::Enter() {
+	DeSwitch::File::Save("Test.txt", "„ÅÇ");
+	DeSwitch::File::Save_Add("Test.txt", "\n");
+	DeSwitch::File::Save_Add("Test.txt", "„ÅÇ");
+
+	//for(int i = 0; i < 2; i++) DeSwitch::File::Load<int>("Test.txt", &test[i]);
+
+	SetBackgroundColor(255, 255, 255);
+
+	m_time = 0;
+
+	Time::Init();
+
+	m_text.push_back(Text("„ÅÇ„Å™„Åü„ÅØ‰ªä„ÄÅ‰Ωï„Çí„Åó„Å¶„ÅÑ„Åæ„Åô„ÅãÔºü", Vector2Int(GetFontSize() * 3, HEIGHT / 2 + GetFontSize() * 4 + 15), RED));
+
 	m_button = new Button* [m_stage];
 	m_now_stage_button = new int[m_stage];
-	m_files = { "../Image/Switch1.png","../Image/Switch2.png" };
 
 	for (int i = 0; i < m_stage; i++) {
 		m_now_stage_button[i] = i + 1;
 
 		m_button[i] = new Button[m_now_stage_button[i]]
-		{ Box(GameObject(Vector2Int(0, 0),Vector2(0.6, 0.6),0,m_files),Vector2(), Color())};
+		{ Box(Vector2Int(1024 / 2, 720 / 2),Vector2(0.6, 0.6),Vector2(),0,{ "../Image/Switch1.png","../Image/Switch2.png" })};
 	}
+
+	m_image = m_button[m_now_stage][0].GetImage();
 }
 
 StateBase* GameState::Loop() {
+	Time::Update();
+
+	m_time += Time::deltatime;
+
 	m_player.Operate();
 
 	for (int i = 0; i < m_now_stage_button[m_now_stage]; i++) {
 		if (m_player.Action(MOUSE_LEFT, "WAS_PRESSED", m_button[m_now_stage][i])) {
+			m_button[m_now_stage][i].Press();
 
+			m_button[m_now_stage][i].SetImageIndex(m_button[m_now_stage][i].GetFlag());
 		}
 	}
 
@@ -29,10 +53,49 @@ StateBase* GameState::Loop() {
 	m_player.Display();
 	m_player_friend.Display();
 
+	for(int i = 0; i < 2; i++) DrawFormatString(0, i * 20, BLACK, "%d", test[i]);
+
+	DrawBox(GetFontSize(), HEIGHT / 2 + GetFontSize() * 3, WIDTH - GetFontSize(), HEIGHT - 10, 0x000000, TRUE);
+	DrawBox(GetFontSize() * 2, HEIGHT / 2 + GetFontSize() * 3 + 15, WIDTH - GetFontSize() * 2, HEIGHT - 25, 0xDDDDDD, TRUE);
+
+	for (int i = 0; i < m_text.size(); i++) {
+		m_text[i].OrderDrawText();
+		if (!m_text[i].ShowEnd()) break;
+	}
+
+	SetFontSize(100);
+	DrawFormatString(WIDTH / 2 - GetFontSize() / 2, 100 - GetFontSize() / 2, 0xff0000, "%d", COUNT - int(m_time));
+
+	if (m_time >= COUNT) {
+		int bit = 0;
+
+		for (int i = 0; i < m_now_stage_button[m_now_stage]; i++) bit += m_button[m_now_stage][i].GetFlag();
+
+		do {
+			ClearDrawScreen();
+
+			m_event.MovieAction(bit);
+
+			if (m_player.GetKeyInput().WasPressed(ENTER)) break;
+			else if (m_player.GetKeyInput().WasPressed(ESCAPE)) m_event.MovieStop_And_Play(bit);
+
+			ScreenFlip();
+			WaitTimer(FR);
+		} while (m_event.MovieIsPlayFlag(bit));
+
+		SetBackgroundColor(0, 0, 0);
+		return new TitleBase;
+	}
+
 	return this;
 }
 
 void GameState::Exit() {
+	m_event.AllStop();
+
+	for (int i = 0; i < m_event.GetMovieSize(); i++) m_event.GetMovie(i).Get_MovieData().Destroy();
+	for (int i = 0; i < m_event.GetSoundSize(); i++) m_event.GetSound(i).GetSoundFile().Destroy();
+
 	for (int i = 0; i < m_stage; i++) { if (m_button[i] != nullptr) { delete[] m_button[i];  m_button[i] = nullptr; } }
 	if (m_button != nullptr) { delete[] m_button; m_button = nullptr; }
 
@@ -149,15 +212,15 @@ void GameState::Exit() {
 //FLAG Game::Judge() {
 //	switch (stage) {
 //	case STAGE_1:
-//		if (mouseFlag[STAGE_1][0])return EXPROSSIONFLAG; //âüÇ≥ÇÍÇΩ
-//		else return CLEAR; //âüÇ≥ÇÍÇƒÇ¢Ç»Ç¢
+//		if (mouseFlag[STAGE_1][0])return EXPROSSIONFLAG; //Êäº„Åï„Çå„Åü
+//		else return CLEAR; //Êäº„Åï„Çå„Å¶„ÅÑ„Å™„ÅÑ
 //		break;
 //
 //	case STAGE_2:
-//		if (mouseFlag[STAGE_2][0] && mouseFlag[STAGE_2][1]) return DICEFLAG; //Ç«ÇøÇÁÇ‡âüÇ≥ÇÍÇƒÇ¢ÇÈ
-//		else if (!mouseFlag[STAGE_2][0] && !mouseFlag[STAGE_2][1]) return BOXINGFLAG; //Ç«ÇøÇÁÇ‡âüÇ≥ÇÍÇƒÇ¢Ç»Ç¢
-//		else if (mouseFlag[STAGE_2][0] && !mouseFlag[STAGE_2][1]) return EXPROSSIONFLAG; //1å¬ñ⁄Å®âüÇ≥ÇÍÇƒÇ¢ÇÈÅA2å¬ñ⁄Å®âüÇ≥ÇÍÇƒÇ¢ÇÈ
-//		else return CLEAR; //1å¬ñ⁄Å®âüÇ≥ÇÍÇƒÇ¢Ç»Ç¢ÅA2å¬ñ⁄Å®âüÇ≥ÇÍÇƒÇ¢ÇÈ
+//		if (mouseFlag[STAGE_2][0] && mouseFlag[STAGE_2][1]) return DICEFLAG; //„Å©„Å°„Çâ„ÇÇÊäº„Åï„Çå„Å¶„ÅÑ„Çã
+//		else if (!mouseFlag[STAGE_2][0] && !mouseFlag[STAGE_2][1]) return BOXINGFLAG; //„Å©„Å°„Çâ„ÇÇÊäº„Åï„Çå„Å¶„ÅÑ„Å™„ÅÑ
+//		else if (mouseFlag[STAGE_2][0] && !mouseFlag[STAGE_2][1]) return EXPROSSIONFLAG; //1ÂÄãÁõÆ‚ÜíÊäº„Åï„Çå„Å¶„ÅÑ„Çã„ÄÅ2ÂÄãÁõÆ‚ÜíÊäº„Åï„Çå„Å¶„ÅÑ„Çã
+//		else return CLEAR; //1ÂÄãÁõÆ‚ÜíÊäº„Åï„Çå„Å¶„ÅÑ„Å™„ÅÑ„ÄÅ2ÂÄãÁõÆ‚ÜíÊäº„Åï„Çå„Å¶„ÅÑ„Çã
 //		break;
 //
 //	case STAGE_3:

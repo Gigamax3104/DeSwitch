@@ -20,23 +20,25 @@ KeyInput::~KeyInput() {
 }
 
 void KeyInput::Check(int button) {
-	if (CheckHitKey(button) == 0) {
+	if (m_relese_flag[button]) m_relese_flag[button] = false;
+
+	if (m_input[button] >= 1 && CheckHitKey(button) == 0) {
 		m_input[button] = 0;
 		m_relese_flag[button] = true;
 	}
 	
 	m_input[button] += CheckHitKey(button);
-	if (m_input[button] >= 1) m_relese_flag[button] = false;
 }
 
 void KeyInput::AllCheck() {
 	for (int i = 0; i < m_input_size; i++) {
-		if (CheckHitKey(m_buttons[i]) == 0) {
+		if (m_relese_flag[i]) m_relese_flag[i] = false;
+
+		if (m_input[i] >= 1 && CheckHitKey(m_buttons[i]) == 0) {
 			m_input[i] = 0;
 			m_relese_flag[i] = true;
 		}
 
 		m_input[i] += CheckHitKey(m_buttons[i]);
-		if (m_input[i] >= 1) m_relese_flag[i] = false;
 	}
 }

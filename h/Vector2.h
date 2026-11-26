@@ -41,7 +41,7 @@ public:
 	bool operator!=(double value) { return x != value && y != value; }
 	bool operator!=(const Vector2& value) { return x != value.x && y != value.y; }
 
-	const Vector2 Half() { return Vector2(x / 2.0, y / 2.0); }
+	Vector2 Half() const { return Vector2(x / 2.0, y / 2.0); }
 
 	void Normalize() { double norm = Norm(); if (norm > 0.0) { x /= norm; y /= norm; } }
 
@@ -52,10 +52,3 @@ public:
 private:
 	double Norm() { return sqrt(pow(x + y, 2)); }
 };
-
-//Vector2 operator+(const Vector2& v1, const Vector2& v2) { return Vector2(v1.x + v2.x, v1.y + v2.y); }
-//Vector2 operator-(const Vector2& v1, const Vector2& v2) { return Vector2(v1.x - v2.x, v1.y + v2.y); }
-//Vector2 operator*(const Vector2& v1, const Vector2& v2) { return Vector2(v1.x * v2.x, v1.y * v2.y); }
-//
-//Vector2 operator*(const Vector2& value, double scaler) { return Vector2(value.x * scaler, value.y * scaler); }
-//Vector2 operator*(double scaler, const Vector2& value) { return Vector2(value.x * scaler, value.y * scaler); }

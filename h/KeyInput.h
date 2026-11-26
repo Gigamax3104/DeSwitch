@@ -28,7 +28,7 @@
 #define KEY_P 25
 #define L_BRACKET 26
 #define R_BRACKET 27
-#define RETURN 28
+#define ENTER 28
 #define L_CONTROL 29
 #define KEY_A 30
 #define KEY_S 31
@@ -111,7 +111,7 @@ public:
 	void Check(int button) override;
 	void AllCheck() override;
 
-	bool WasPressed(int button) override { return m_input[button] == 1; }
-	bool IsPressing(int button) override { return m_input[button] >= 1; }
-	bool WasReleased(int button) override { return m_relese_flag[button]; }
+	bool WasPressed(int button) override { Check(button); return m_input[button] == 1; }
+	bool IsPressing(int button) override { Check(button); return m_input[button] >= 1; }
+	bool WasReleased(int button) override { Check(button); return m_relese_flag[button]; }
 };

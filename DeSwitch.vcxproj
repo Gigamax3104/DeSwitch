@@ -37,7 +37,9 @@
     <ClInclude Include="h\Player.h" />
     <ClInclude Include="h\Position.h" />
     <ClInclude Include="h\StateBase.h" />
-    <ClInclude Include="h\TitleState.h" />
+    <ClInclude Include="h\Text.h" />
+    <ClInclude Include="h\Time.h" />
+    <ClInclude Include="h\Title.h" />
     <ClInclude Include="h\Variable.h" />
     <ClInclude Include="h\Vector2.h" />
     <ClInclude Include="h\Vector2Int.h" />
@@ -56,6 +58,9 @@
     <ClCompile Include="cpp\MousePointer.cpp" />
     <ClCompile Include="cpp\Movement.cpp" />
     <ClCompile Include="cpp\Player.cpp" />
+    <ClCompile Include="cpp\Text.cpp" />
+    <ClCompile Include="Cpp\Time.cpp" />
+    <ClCompile Include="Cpp\Title.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
